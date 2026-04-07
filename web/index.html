@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频下载器</title>
+  <link rel="stylesheet" href="/static/style.css?v=8">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero panel">
+      <div class="hero-copy">
+        <div class="eyebrow">🍃 Video Downloader</div>
+        <h1>简单好用的视频下载器</h1>
+        <p class="muted">粘贴链接，选好清晰度和格式，然后开始下载。</p>
+        <div class="hero-notes">
+          <span class="hero-note">🖥️ 本地运行</span>
+          <span class="hero-note">🌐 常见站点可用</span>
+          <span class="hero-note">🎞️ 视频音频可自选</span>
+        </div>
+      </div>
+      <div class="hero-badges">
+        <div id="backendStatusBox" class="badge-box status-unknown"><span>🫧 后端状态</span><strong id="backendStatusText">检测中…</strong></div>
+      </div>
+    </section>
+
+    <section id="inputPanel" class="panel">
+      <div class="section-title">
+        <div>
+          <h2>🔗 输入链接</h2>
+          <p class="muted">支持 bilibili、YouTube 等近千个视频网站的视频下载。</p>
+        </div>
+        <div class="panel-actions">
+          <button id="openSupportedSitesButton" class="ghost" type="button">🌐 查询支持站点</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <input id="urlInput" type="url" placeholder="粘贴视频链接，例如 https://www.youtube.com/watch?v=...">
+        <button id="inspectButton" class="primary">查看可选规格</button>
+      </div>
+      <div id="authAssist" class="helper-row hidden">
+        <div class="helper-card compact">
+          <div class="helper-inline">
+            <div class="helper-copy">
+              <strong>这个链接可能需要登录信息。</strong>
+              <span id="authAssistText">请选择 cookies.txt；如果不知道怎么获取，点“获取教程”。</span>
+            </div>
+            <div class="helper-actions">
+              <button id="chooseCookiesButton" class="ghost" type="button">选择 cookies.txt</button>
+              <button id="openCookieTutorialButton" class="ghost" type="button">获取教程</button>
+              <button id="clearCookiesButton" class="ghost" type="button">清除</button>
+            </div>
+          </div>
+          <div id="cookiesDisplay" class="folder-current compact" title="">未设置</div>
+        </div>
+      </div>
+      <div id="message" class="message"></div>
+    </section>
+
+    <section id="overviewPanel" class="panel hidden">
+      <div class="section-title">
+        <div>
+          <h2>🎬 视频概览</h2>
+        </div>
+      </div>
+      <div class="overview-card">
+        <img id="thumbnail" alt="缩略图">
+        <div class="overview-main">
+          <h3 id="videoTitle">-</h3>
+          <div id="videoMetaText" class="muted">-</div>
+          <details id="descriptionBox" class="description-box">
+            <summary>📝 查看简介</summary>
+            <div id="videoDescription" class="description"></div>
+          </details>
+          <div id="warnings" class="warnings"></div>
+        </div>
+      </div>
+
+      <details id="videoDetails" class="collapsible" open>
+        <summary>🎞️ 视频规格 <span id="videoCount" class="muted">0 项</span></summary>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>选择</th>
+                <th>ID</th>
+                <th>分辨率</th>
+                <th>FPS</th>
+                <th>范围</th>
+                <th>封装</th>
+                <th>编码</th>
+                <th>体积</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody id="videoFormatsTable"></tbody>
+          </table>
+        </div>
+      </details>
+
+      <details id="audioDetails" class="collapsible" open>
+        <summary>🔊 音频规格 <span id="audioCount" class="muted">0 项</span></summary>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>选择</th>
+                <th>ID</th>
+                <th>封装</th>
+                <th>编码</th>
+                <th>码率</th>
+                <th>声道</th>
+                <th>体积</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody id="audioFormatsTable"></tbody>
+          </table>
+        </div>
+      </details>
+
+      <div class="download-options">
+        <div class="download-options-main">
+          <label>
+            输出格式
+            <div class="select-shell custom-select" id="mergeFormatShell">
+              <select id="mergeFormat" class="native-select-hidden" tabindex="-1" aria-hidden="true"></select>
+              <button id="mergeFormatButton" class="select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" disabled>请先选择想保留的视频和/或音频规格。</button>
+              <div id="mergeFormatMenu" class="select-menu hidden" role="listbox" aria-label="输出格式"></div>
+            </div>
+            <span id="mergeFormatHint" class="muted tiny">请先选择想保留的视频和/或音频规格。</span>
+          </label>
+        </div>
+        <div class="download-options-path">
+          <span class="field-title">保存位置</span>
+          <div class="path-inline">
+            <div id="outputDirDisplay" class="folder-current" title="">-</div>
+            <button id="chooseOutputDirButton" class="ghost" type="button">选择文件夹</button>
+          </div>
+          <span class="muted tiny">默认使用系统 Downloads 文件夹。</span>
+        </div>
+      </div>
+
+      <div class="selection-box">
+        <div>
+          <div class="muted tiny">当前选择</div>
+          <div id="selectionSummary">请先选择视频或音频规格</div>
+        </div>
+        <button id="downloadButton" class="primary" disabled>⬇️ 开始下载</button>
+      </div>
+    </section>
+
+    <section id="progressPanel" class="panel hidden console-panel">
+      <div class="section-title">
+        <div>
+          <h2>⏱️ 下载进度</h2>
+        </div>
+      </div>
+      <div class="console-topbar">
+        <div class="console-heading">
+          <h3 id="jobTitle">当前任务</h3>
+          <div id="jobStatus" class="status-pill">未开始</div>
+        </div>
+        <div class="actions-row console-actions">
+          <button id="togglePauseButton" class="ghost" disabled>⏸️ 暂停</button>
+          <button id="cancelButton" class="danger" disabled>⛔ 终止</button>
+          <button id="openFolderButton" class="ghost" disabled>📂 打开</button>
+        </div>
+      </div>
+      <div class="console-progress-card">
+        <div class="progress-shell"><div id="progressBar" class="progress-bar"></div></div>
+        <div class="progress-grid console-grid">
+          <div><span>进度</span><strong id="progressPercent">0%</strong></div>
+          <div><span>已下载</span><strong id="downloadedText">0 B / 未知</strong></div>
+          <div><span>速度</span><strong id="speedText">-</strong></div>
+          <div><span>剩余</span><strong id="etaText">-</strong></div>
+        </div>
+      </div>
+      <details class="log-box console-log-box" open>
+        <summary>📜 查看日志</summary>
+        <pre id="logOutput"></pre>
+      </details>
+    </section>
+  </main>
+
+  <div id="siteModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="true"></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="siteModalTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="siteModalTitle">🌐 支持站点查询</h3>
+          <p class="muted">输入关键词，看看某个网站是否支持。</p>
+        </div>
+        <button id="closeSupportedSitesButton" class="ghost icon-button" type="button" aria-label="关闭">✕</button>
+      </div>
+      <div class="site-search-box modal-search-box">
+        <input id="supportedSiteSearch" type="text" placeholder="例如 youtube / bilibili / twitch / 小红书">
+        <div id="commonSiteChips" class="common-chip-list"></div>
+        <div class="site-search-meta">
+          <span id="supportedSiteMeta" class="muted tiny">正在载入支持站点列表…</span>
+          <a id="supportedSiteSource" href="https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md" target="_blank" rel="noreferrer">查看官方完整列表</a>
+        </div>
+        <div id="supportedSiteResults" class="site-chip-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="cookieTutorialModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-cookie-modal="true"></div>
+    <div class="modal-card modal-card-narrow" role="dialog" aria-modal="true" aria-labelledby="cookieTutorialTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="cookieTutorialTitle">🍪 如何获取 cookies.txt</h3>
+          <p class="muted">适用于 YouTube、Bilibili、X / Twitter、Instagram 等需要登录或验证的网站。</p>
+        </div>
+        <button id="closeCookieTutorialButton" class="ghost icon-button" type="button" aria-label="关闭">✕</button>
+      </div>
+      <div class="cookie-guide">
+        <div class="cookie-guide-tip">
+          先确认：你已经能在浏览器里正常打开这个页面或视频，并且使用的是正确的账号与浏览器配置文件。
+        </div>
+        <ol class="cookie-guide-steps">
+          <li>在你平时能正常打开目标内容的浏览器里登录对应网站。</li>
+          <li>使用支持导出 <code>cookies.txt</code>（Netscape / Mozilla 格式）的浏览器工具或扩展导出当前站点的 cookies。Chrome 推荐使用 <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank" rel="noreferrer">Get cookies.txt LOCALLY</a>。</li>
+          <li>保存为 <code>cookies.txt</code>，回到本工具点击“选择 cookies.txt”导入。</li>
+          <li>如果网站经常风控或导出后仍失效，请重新导出一份新的 cookies.txt。</li>
+        </ol>
+        <div class="cookie-guide-note">
+          <strong>YouTube 额外建议</strong>
+          <p>优先在无痕 / 隐私窗口中登录 YouTube，确认视频可播放后，在同一窗口访问 <code>https://www.youtube.com/robots.txt</code> 再导出 cookies.txt，导出后关闭该无痕窗口。</p>
+        </div>
+        <div class="cookie-guide-note">
+          <strong>注意事项</strong>
+          <ul>
+            <li><code>cookies.txt</code> 含有登录信息，请勿随意发送给他人。</li>
+            <li>必须从你实际登录目标网站的同一个浏览器、同一个配置文件导出。</li>
+            <li>不同网站的 cookie 过期速度不同，失效后重新导出即可。</li>
+          </ul>
+        </div>
+        <div class="cookie-guide-links">
+          <a href="https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp" target="_blank" rel="noreferrer">yt-dlp：如何传入 cookies</a>
+          <a href="https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies" target="_blank" rel="noreferrer">yt-dlp：导出 YouTube cookies</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/static/app.js?v=8"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# Start with: python main.py
+name: video-downloader
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - ffmpeg
+  - nodejs
+  - pip
+  - pip:
+      - yt-dlp[default]==2026.3.17
