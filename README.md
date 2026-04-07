@@ -1,83 +1,56 @@
 # Video Downloader
 
-一个本地运行的最小化视频下载工具。
+## 界面预览
 
-## 目录结构
+### YouTube
 
-```text
-.
-├─ src/                  # Python 后端包
-├─ web/                  # 前端静态资源
-├─ environment.yml       # Conda 环境定义
-└─ README.md
-```
+![YouTube](screenshots/youtube.png)
 
-## 依赖
+### Bilibili
 
-运行依赖全部来自当前环境：
+![Bilibili](screenshots/bilibili.png)
 
-- `yt-dlp`
-- `ffmpeg`
-- `node`
+一个面向日常使用的本地视频下载工具。
 
-项目本身不再内置任何二进制文件。
+它以极其成熟的 **yt-dlp** 作为下载与解析核心，以 **ffmpeg** 作为音视频处理核心，并提供一个更直观的网页界面，用来辅助完成链接解析、规格选择、格式转换和下载管理。
 
-## 推荐安装
+## 特性
 
-### 方式 1：手动创建
+- 基于 `yt-dlp` 的本地前端封装，结合 `ffmpeg` 可以选择视频规格、音频规格与输出格式
+- 支持 `cookies.txt` 导入，适配部分需要登录信息的网站
 
-```powershell
-conda create -n video-downloader -c conda-forge python=3.11 ffmpeg nodejs pip -y
-conda activate video-downloader
-python -m pip install "yt-dlp[default]==2026.3.17"
-```
+## 支持站点查询
 
-### 方式 2：使用 environment.yml
+站点支持范围以 `yt-dlp` 为准，有近千个网页，常见包括：Bilibili、网易云音乐、YouTube、TikTok/抖音、X/Twitter、Instagram、Niconico等。
+
+可在应用内查询是否支持：
+
+![Supported Sites](<screenshots/supported sites.png>)
+
+## 安装
+
+在该项目文件夹下运行：
 
 ```powershell
 conda env create -f .\environment.yml
-conda activate video-downloader
 ```
 
 ## 启动
+
+在该项目文件夹下运行：
 
 ```powershell
 conda activate video-downloader
 python main.py
 ```
 
-启动后终端会输出本地地址，例如：
+启动后终端会输出本地地址，在浏览器中打开即可。例如：
 
 ```text
 http://127.0.0.1:8765
 ```
 
-## 默认下载路径
+## 关于 cookies.txt
 
-默认下载到系统 `Downloads` 目录。
-
-Windows 下一般是：
-
-```text
-C:\Users\<用户名>\Downloads
-```
-
-也可以在界面中手动改下载路径。
-
-## 当前功能
-
-- 输入链接并解析格式
-- 选择视频 / 音频规格
-- 选择输出封装
-- 选择下载路径
-- 下载进度、暂停、继续、终止
-- 打开输出文件位置
-- 支持站点查询弹窗
-
-## 依赖检查
-
-```powershell
-python -m yt_dlp --version
-ffmpeg -version
-node --version
-```
+部分网站或视频会要求登录、年龄验证、会员权限或额外校验。  
+这种情况下，可以在界面中导入 `cookies.txt`。工具也提供了如何获取cookies的教程。

@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+import ctypes
 import json
 import mimetypes
 import signal
@@ -20,6 +21,8 @@ from .downloader import DownloadManager
 from .formats import build_format_payload
 from .jobs import JobStore
 from .utils import now_iso
+
+_DPI_AWARE_READY = False
 
 
 class AppState:
@@ -234,6 +237,54 @@ def open_target(target: str, config: AppConfig) -> dict:
     return {"ok": True, "path": str(path)}
 
 
+def ensure_windows_dpi_awareness() -> None:
+    global _DPI_AWARE_READY
+    if _DPI_AWARE_READY or sys.platform != "win32":
+        return
+    try:
+        ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
+    except Exception:
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except Exception:
+            try:
+                ctypes.windll.user32.SetProcessDPIAware()
+            except Exception:
+                pass
+    _DPI_AWARE_READY = True
+
+
+def create_dialog_root() -> tk.Tk:
+    ensure_windows_dpi_awareness()
+    root = tk.Tk()
+    root.title("Video Downloader")
+    root.geometry("0x0+0+0")
+    try:
+        root.overrideredirect(True)
+    except Exception:
+        pass
+    try:
+        root.attributes("-alpha", 0.0)
+    except Exception:
+        pass
+    try:
+        root.attributes("-topmost", True)
+    except Exception:
+        pass
+    root.update_idletasks()
+    try:
+        root.deiconify()
+    except Exception:
+        pass
+    try:
+        root.lift()
+        root.focus_force()
+    except Exception:
+        pass
+    root.update()
+    return root
+
+
 def pick_folder(current: str, config: AppConfig) -> dict:
     initial = current or str(config.downloads_dir)
     initial_path = Path(initial)
@@ -242,9 +293,7 @@ def pick_folder(current: str, config: AppConfig) -> dict:
     if not initial_path.exists():
         initial_path = config.downloads_dir
 
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes("-topmost", True)
+    root = create_dialog_root()
     try:
         selected = filedialog.askdirectory(
             parent=root,
@@ -253,6 +302,10 @@ def pick_folder(current: str, config: AppConfig) -> dict:
             mustexist=False,
         )
     finally:
+        try:
+            root.attributes("-topmost", False)
+        except Exception:
+            pass
         root.destroy()
     if not selected:
         return {"path": current or str(config.downloads_dir), "cancelled": True}
@@ -268,9 +321,7 @@ def pick_cookie_file(current: str, config: AppConfig) -> dict:
     else:
         initial_dir = config.root
 
-    root = tk.Tk()
-    root.withdraw()
-    root.attributes("-topmost", True)
+    root = create_dialog_root()
     try:
         selected = filedialog.askopenfilename(
             parent=root,
@@ -279,6 +330,10 @@ def pick_cookie_file(current: str, config: AppConfig) -> dict:
             filetypes=[("Cookies 文件", "*.txt"), ("所有文件", "*.*")],
         )
     finally:
+        try:
+            root.attributes("-topmost", False)
+        except Exception:
+            pass
         root.destroy()
     if not selected:
         return {"path": current or "", "cancelled": True}
